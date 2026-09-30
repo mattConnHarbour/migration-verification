@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { SuperDocClient } from "@superdoc/sdk";
-import { parseArgs, positiveInteger } from "./args.mjs";
+import { parseArgs, positiveInteger } from "../args.mjs";
 
 export async function compareDocumentStructure(basePath, targetPath, timeoutMs = 180_000) {
   const client = new SuperDocClient({ runtime: "v2" });

@@ -29,12 +29,12 @@ pnpm verify-migration
 └── scripts/main.mjs
     └── scripts/run-migration-verification.mjs
         ├── scripts/migrate-collaboration-document.mjs
-        ├── scripts/compare-document-structure.mjs   (--diff-only or default)
-        └── scripts/compare-document-image.mjs       (--image-only or default)
+        ├── scripts/compare/structure.mjs   (--diff-only or default)
+        └── scripts/compare/image.mjs       (--image-only or default)
 
 pnpm migrate       -> scripts/migrate-collaboration-document.mjs
-pnpm diff          -> scripts/compare-document-structure.mjs
-pnpm image-compare -> scripts/compare-document-image.mjs
+pnpm diff          -> scripts/compare/structure.mjs
+pnpm image-compare -> scripts/compare/image.mjs
 ```
 
 `main.mjs` is the CLI boundary. It calls the sequential orchestrator and CSV writer

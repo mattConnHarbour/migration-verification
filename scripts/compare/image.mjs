@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import pixelmatch from "pixelmatch";
 import { chromium } from "playwright";
 import { PNG } from "pngjs";
-import { parseArgs, positiveInteger } from "./args.mjs";
-import { startBrowserHarness, waitUntilReady } from "./browser-harness.mjs";
+import { parseArgs, positiveInteger } from "../args.mjs";
+import { startBrowserHarness, waitUntilReady } from "../browser-harness.mjs";
 
 const HERE = fileURLToPath(import.meta.url);
 

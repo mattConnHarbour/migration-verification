@@ -30,8 +30,8 @@ Use Node.js 20+; `pnpm run browser:install` installs the pinned Chromium build.
 scripts/main.mjs
 └── scripts/run-migration-verification.mjs
     ├── scripts/migrate-collaboration-document.mjs
-    ├── scripts/compare-document-structure.mjs
-    └── scripts/compare-document-image.mjs
+    ├── scripts/compare/structure.mjs
+    └── scripts/compare/image.mjs
 ```
 
 `scripts/main.mjs` is the CLI boundary and calls the orchestrator directly.
