@@ -27,21 +27,19 @@ report.
 ```text
 pnpm verify-migration
 └── scripts/main.mjs
-    └── scripts/migration-verification-facade.mjs
-        └── scripts/run-migration-verification.mjs
-            ├── scripts/migrate-collaboration-document.mjs
-            ├── scripts/compare-document-structure.mjs   (--diff-only or default)
-            └── scripts/compare-document-image.mjs       (--image-only or default)
+    └── scripts/run-migration-verification.mjs
+        ├── scripts/migrate-collaboration-document.mjs
+        ├── scripts/compare-document-structure.mjs   (--diff-only or default)
+        └── scripts/compare-document-image.mjs       (--image-only or default)
 
 pnpm migrate       -> scripts/migrate-collaboration-document.mjs
 pnpm diff          -> scripts/compare-document-structure.mjs
 pnpm image-compare -> scripts/compare-document-image.mjs
 ```
 
-`main.mjs` is the CLI boundary. It delegates through
-`migration-verification-facade.mjs` to the sequential orchestrator and CSV writer in
-`run-migration-verification.mjs`. The orchestrator always migrates first, then calls
-the selected comparison stages. The three stage scripts remain independently
+`main.mjs` is the CLI boundary. It calls the sequential orchestrator and CSV writer
+in `run-migration-verification.mjs`. The orchestrator always migrates first, then
+calls the selected comparison stages. The three stage scripts remain independently
 executable. Shared CLI parsing lives in `scripts/args.mjs`; browser startup and
 readiness handling live in `scripts/browser-harness.mjs`.
 

@@ -28,14 +28,13 @@ Use Node.js 20+; `pnpm run browser:install` installs the pinned Chromium build.
 
 ```text
 scripts/main.mjs
-└── scripts/migration-verification-facade.mjs
-    └── scripts/run-migration-verification.mjs
-        ├── scripts/migrate-collaboration-document.mjs
-        ├── scripts/compare-document-structure.mjs
-        └── scripts/compare-document-image.mjs
+└── scripts/run-migration-verification.mjs
+    ├── scripts/migrate-collaboration-document.mjs
+    ├── scripts/compare-document-structure.mjs
+    └── scripts/compare-document-image.mjs
 ```
 
-`scripts/main.mjs` is the CLI boundary; the facade delegates to the orchestrator.
+`scripts/main.mjs` is the CLI boundary and calls the orchestrator directly.
 The orchestrator migrates, invokes selected comparisons, and writes reports.
 Migration stays comparison-free; both comparisons stay independently executable.
 
