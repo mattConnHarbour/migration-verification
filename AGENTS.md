@@ -48,7 +48,7 @@ pnpm image-compare -- /external/reference.docx /external/candidate.docx \
 ```
 
 The migration command produces `ingested-v1.docx`, `ingested-v2.docx`, and
-`report.json`. It also performs the structural diff, but does not run image comparison:
+`report.json`. It performs no comparison:
 
 ```bash
 pnpm migrate -- /external/source.docx \
@@ -67,6 +67,10 @@ This always writes `report.csv`. `--keep-images` additionally retains per-docume
 page PNGs, triptychs, JSON, and HTML under the output directory. Without the flag,
 the command records image metrics in the CSV and deletes temporary page images.
 Structural differences do not prevent the image comparison from running.
+
+The default runs both comparisons. Add `--diff-only` for structural comparison only
+or `--image-only` for image comparison only. The flags are mutually exclusive. The
+CSV must mark the unselected stage `skipped`, not failed.
 
 ## Image verification procedure
 

@@ -13,7 +13,6 @@ import { upgradeCollaboration } from "@superdoc/v2-collaboration-upgrade";
 import { createHocuspocusUpgradeAdapter } from "@superdoc/v2-collaboration-upgrade/hocuspocus";
 import { parseArgs, positiveInteger } from "./args.mjs";
 import { startBrowserHarness, waitUntilReady } from "./browser-harness.mjs";
-import { compareDocx } from "./diff-docx.mjs";
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -179,10 +178,9 @@ async function main() {
       timeoutMs,
     });
 
-    const diff = await compareDocx(v1DocxPath, v2DocxPath, timeoutMs);
     const report = {
-      schemaVersion: "migration-verification/run/v1",
-      pipeline: ["disk", "v1-room", "v1-export", "v2-room", "v2-export", "public-api-diff"],
+      schemaVersion: "migration-verification/migration/v1",
+      pipeline: ["disk", "v1-room", "v1-export", "v2-room", "v2-export"],
       input,
       inputSha256: sha256(source),
       sourceRoomId,
@@ -192,12 +190,10 @@ async function main() {
       receipt,
       verificationState: state.snapshot(),
       artifacts: { v1Docx: v1DocxPath, v2Docx: v2DocxPath },
-      diff,
     };
     const reportPath = path.join(outputRoot, "report.json");
     await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-    process.stdout.write(`${JSON.stringify({ same: diff.same, changedComponents: diff.changedComponents, v1Docx: v1DocxPath, v2Docx: v2DocxPath, report: reportPath }, null, 2)}\n`);
-    if (!diff.same) process.exitCode = 2;
+    process.stdout.write(`${JSON.stringify({ migrated: true, v1Docx: v1DocxPath, v2Docx: v2DocxPath, report: reportPath }, null, 2)}\n`);
   } finally {
     await server.destroy();
   }

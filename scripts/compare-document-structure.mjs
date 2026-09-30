@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { SuperDocClient } from "@superdoc/sdk";
 import { parseArgs, positiveInteger } from "./args.mjs";
 
-export async function compareDocx(basePath, targetPath, timeoutMs = 180_000) {
+export async function compareDocumentStructure(basePath, targetPath, timeoutMs = 180_000) {
   const client = new SuperDocClient({ runtime: "v2" });
   let base;
   let target;
@@ -32,7 +32,7 @@ export async function compareDocx(basePath, targetPath, timeoutMs = 180_000) {
 async function main() {
   const { positional: [basePath, targetPath], flags } = parseArgs(process.argv.slice(2), 2);
   const timeoutMs = positiveInteger(flags.get("timeout-ms") ?? "180000", "--timeout-ms");
-  const report = await compareDocx(basePath, targetPath, timeoutMs);
+  const report = await compareDocumentStructure(basePath, targetPath, timeoutMs);
   const out = flags.get("out");
   if (out) {
     const outputPath = path.resolve(out);

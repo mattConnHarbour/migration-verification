@@ -5,7 +5,7 @@ The repository does not require an Orbit checkout and does not contact SuperDoc 
 
 ## What it does
 
-The migration command runs this pipeline:
+The complete verification command runs this pipeline:
 
 ```text
 DOCX on disk
@@ -16,7 +16,7 @@ DOCX on disk
   -> compare both exports through the public SDK diff API
 ```
 
-The original v1 room is never changed. The diff is reported but never applied.
+The original v1 room is never changed. Generated diffs are reported but never applied.
 
 The image command opens both exported DOCX files with the same public SuperDoc
 browser build, screenshots every page, and produces pixel diffs and a manual HTML
@@ -39,7 +39,7 @@ The collaboration-upgrade package is included under `vendor/` because the packag
 build being verified is not yet installed from the public npm registry. All other
 dependencies are pinned npm packages.
 
-## Migrate, export, and structurally compare
+## Migrate and export only
 
 The output directory must be empty.
 
@@ -54,10 +54,10 @@ Outputs:
 
 - `ingested-v1.docx` — detached export of the v1 room
 - `ingested-v2.docx` — public-browser export after joining the v2 room
-- `report.json` — migration receipt plus the complete public SDK diff result
+- `report.json` — migration receipt and artifact paths
 
-Exit codes are `0` for same, `2` for a completed comparison that found differences,
-and `1` for an execution failure.
+This command performs no structural or image comparison. Its exit code is `0` for a
+completed migration and `1` for an execution failure.
 
 ## Run the complete migration and image-verification sequence
 
@@ -80,6 +80,21 @@ triptychs, `report.json`, and browsable `index.html` under `documents/<id>/image
 and the CSV links to those reports. Without it, image generation uses a temporary
 directory and the CSV retains the visual verdict and metrics without retaining
 customer-content images.
+
+By default both comparison engines run. Select exactly one when needed:
+
+```bash
+# Migration followed by structural diff only
+pnpm verify-migration -- /path/to/document-or-directory \
+  --out /tmp/migration-verification/diff-only --diff-only
+
+# Migration followed by image comparison only
+pnpm verify-migration -- /path/to/document-or-directory \
+  --out /tmp/migration-verification/image-only --image-only --keep-images
+```
+
+`--diff-only` and `--image-only` are mutually exclusive. The CSV marks the omitted
+stage as `skipped` and leaves its result columns empty.
 
 Exit codes are `0` when every comparison is the same, `2` when all work completed but
 at least one structural or visual comparison differs, and `1` when any migration or
