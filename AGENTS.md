@@ -22,22 +22,22 @@ pnpm install --frozen-lockfile
 pnpm run browser:install
 ```
 
-Use Node.js 20 or newer. `pnpm run browser:install` installs the pinned Playwright
-Chromium build required by migration export and image verification.
+Use Node.js 20+; `pnpm run browser:install` installs the pinned Chromium build.
 
 ## Script hierarchy
 
 ```text
-scripts/run-migration-verification.mjs
-├── scripts/migrate-collaboration-document.mjs
-├── scripts/compare-document-structure.mjs
-└── scripts/image-compare.mjs
+scripts/main.mjs
+└── scripts/migration-verification-facade.mjs
+    └── scripts/run-migration-verification.mjs
+        ├── scripts/migrate-collaboration-document.mjs
+        ├── scripts/compare-document-structure.mjs
+        └── scripts/image-compare.mjs
 ```
 
-The orchestrator always migrates, invokes the selected comparisons, and writes CSV
-and summary output. Migration must remain comparison-free. Structural and image
-comparison must remain independently executable. `scripts/browser-harness.mjs` is
-shared browser infrastructure; `scripts/args.mjs` is shared CLI parsing.
+`scripts/main.mjs` is the CLI boundary; the facade delegates to the orchestrator.
+The orchestrator migrates, invokes selected comparisons, and writes reports.
+Migration stays comparison-free; both comparisons stay independently executable.
 
 ## Independent commands
 

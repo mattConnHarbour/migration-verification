@@ -26,21 +26,24 @@ report.
 
 ```text
 pnpm verify-migration
-└── scripts/run-migration-verification.mjs
-    ├── scripts/migrate-collaboration-document.mjs
-    ├── scripts/compare-document-structure.mjs   (--diff-only or default)
-    └── scripts/image-compare.mjs                (--image-only or default)
+└── scripts/main.mjs
+    └── scripts/migration-verification-facade.mjs
+        └── scripts/run-migration-verification.mjs
+            ├── scripts/migrate-collaboration-document.mjs
+            ├── scripts/compare-document-structure.mjs   (--diff-only or default)
+            └── scripts/image-compare.mjs                (--image-only or default)
 
 pnpm migrate       -> scripts/migrate-collaboration-document.mjs
 pnpm diff          -> scripts/compare-document-structure.mjs
 pnpm image-compare -> scripts/image-compare.mjs
 ```
 
-`run-migration-verification.mjs` is the sequential orchestrator and CSV writer.
-It always migrates first, then calls the selected comparison stages. The other three
-scripts are independently executable and own exactly one operation each. Shared CLI
-parsing lives in `scripts/args.mjs`; browser startup and readiness handling live in
-`scripts/browser-harness.mjs`.
+`main.mjs` is the CLI boundary. It delegates through
+`migration-verification-facade.mjs` to the sequential orchestrator and CSV writer in
+`run-migration-verification.mjs`. The orchestrator always migrates first, then calls
+the selected comparison stages. The three stage scripts remain independently
+executable. Shared CLI parsing lives in `scripts/args.mjs`; browser startup and
+readiness handling live in `scripts/browser-harness.mjs`.
 
 Use `verify-migration` for an end-to-end document or directory run, `migrate` when
 only exports are needed, and the independent `diff` or `image-compare` commands when

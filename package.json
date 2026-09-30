@@ -9,7 +9,7 @@
   "scripts": {
     "browser:install": "playwright install chromium",
     "migrate": "node scripts/migrate-collaboration-document.mjs",
-    "verify-migration": "node scripts/run-migration-verification.mjs",
+    "verify-migration": "node scripts/main.mjs",
     "diff": "node scripts/compare-document-structure.mjs",
     "image-compare": "node scripts/image-compare.mjs",
     "verify": "node --test tests/*.test.mjs"

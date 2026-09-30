@@ -69,8 +69,8 @@ function writeCsv(rows) {
     .join("\n")}\n`;
 }
 
-async function main() {
-  const { positional: [input], flags } = parseArgs(process.argv.slice(2), 1, {
+export async function runMigrationVerification(argv = process.argv.slice(2)) {
+  const { positional: [input], flags } = parseArgs(argv, 1, {
     booleanFlags: ["keep-images", "diff-only", "image-only"],
   });
   const out = flags.get("out");
@@ -197,7 +197,9 @@ async function main() {
   else if (rows.some((row) => row.structural_same === "no" || row.visual_same === "no")) process.exitCode = 2;
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  runMigrationVerification().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}
