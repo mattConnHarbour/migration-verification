@@ -9,6 +9,7 @@
   "scripts": {
     "browser:install": "playwright install chromium",
     "migrate": "node scripts/migrate-and-export.mjs",
+    "verify-migration": "node scripts/verify-migration.mjs",
     "diff": "node scripts/diff-docx.mjs",
     "image-compare": "node scripts/image-compare.mjs",
     "verify": "node --test tests/*.test.mjs"

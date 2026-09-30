@@ -59,6 +59,32 @@ Outputs:
 Exit codes are `0` for same, `2` for a completed comparison that found differences,
 and `1` for an execution failure.
 
+## Run the complete migration and image-verification sequence
+
+Use one command for either a single DOCX or every DOCX directly inside a directory:
+
+```bash
+pnpm verify-migration -- \
+  "/path/to/document-or-directory" \
+  --out "/tmp/migration-verification/run" \
+  --timeout-ms 180000 \
+  --keep-images
+```
+
+Documents are processed sequentially. A structural difference is a completed result,
+so image comparison still runs. The command writes `report.csv` and `summary.json` at
+the output root, with one document directory under `documents/` for each input.
+
+`--keep-images` is optional. When present, each document retains its page PNGs,
+triptychs, `report.json`, and browsable `index.html` under `documents/<id>/images/`,
+and the CSV links to those reports. Without it, image generation uses a temporary
+directory and the CSV retains the visual verdict and metrics without retaining
+customer-content images.
+
+Exit codes are `0` when every comparison is the same, `2` when all work completed but
+at least one structural or visual comparison differs, and `1` when any migration or
+image comparison failed.
+
 ## Compare any two DOCX files with the public diff API
 
 ```bash

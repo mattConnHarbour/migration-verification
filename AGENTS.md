@@ -56,6 +56,18 @@ pnpm migrate -- /external/source.docx \
   --timeout-ms 180000
 ```
 
+For one sequential command over a DOCX or a directory of DOCX files, use:
+
+```bash
+pnpm verify-migration -- /external/document-or-directory \
+  --out /tmp/migration-verification/run --timeout-ms 180000 --keep-images
+```
+
+This always writes `report.csv`. `--keep-images` additionally retains per-document
+page PNGs, triptychs, JSON, and HTML under the output directory. Without the flag,
+the command records image metrics in the CSV and deletes temporary page images.
+Structural differences do not prevent the image comparison from running.
+
 ## Image verification procedure
 
 1. Run `pnpm image-compare` with the v1 export as the reference and v2 export as
@@ -84,6 +96,8 @@ pnpm diff -- /external/control.docx /external/control.docx \
   --out /tmp/migration-verification/control-diff.json
 pnpm image-compare -- /external/control.docx /external/control.docx \
   --out /tmp/migration-verification/control-images
+pnpm verify-migration -- /external/control.docx \
+  --out /tmp/migration-verification/control-sequence --keep-images
 ```
 
 The identical-file controls must report `same: true`, identical page counts, and
