@@ -22,6 +22,30 @@ The image command opens both exported DOCX files with the same public SuperDoc
 browser build, screenshots every page, and produces pixel diffs and a manual HTML
 report.
 
+## Command and script hierarchy
+
+```text
+pnpm verify-migration
+└── scripts/run-migration-verification.mjs
+    ├── scripts/migrate-collaboration-document.mjs
+    ├── scripts/compare-document-structure.mjs   (--diff-only or default)
+    └── scripts/image-compare.mjs                (--image-only or default)
+
+pnpm migrate       -> scripts/migrate-collaboration-document.mjs
+pnpm diff          -> scripts/compare-document-structure.mjs
+pnpm image-compare -> scripts/image-compare.mjs
+```
+
+`run-migration-verification.mjs` is the sequential orchestrator and CSV writer.
+It always migrates first, then calls the selected comparison stages. The other three
+scripts are independently executable and own exactly one operation each. Shared CLI
+parsing lives in `scripts/args.mjs`; browser startup and readiness handling live in
+`scripts/browser-harness.mjs`.
+
+Use `verify-migration` for an end-to-end document or directory run, `migrate` when
+only exports are needed, and the independent `diff` or `image-compare` commands when
+reference and candidate DOCX files already exist.
+
 ## Requirements
 
 - Node.js 20 or newer

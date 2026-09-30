@@ -1,7 +1,6 @@
 # Migration verification agent guide
 
-This repository is a standalone, local-only customer tool. It must remain runnable
-without an Orbit checkout or SuperDoc Labs access.
+This standalone local customer tool must run without Orbit or SuperDoc Labs access.
 
 ## Safety and repository boundaries
 
@@ -26,10 +25,23 @@ pnpm run browser:install
 Use Node.js 20 or newer. `pnpm run browser:install` installs the pinned Playwright
 Chromium build required by migration export and image verification.
 
+## Script hierarchy
+
+```text
+scripts/run-migration-verification.mjs
+├── scripts/migrate-collaboration-document.mjs
+├── scripts/compare-document-structure.mjs
+└── scripts/image-compare.mjs
+```
+
+The orchestrator always migrates, invokes the selected comparisons, and writes CSV
+and summary output. Migration must remain comparison-free. Structural and image
+comparison must remain independently executable. `scripts/browser-harness.mjs` is
+shared browser infrastructure; `scripts/args.mjs` is shared CLI parsing.
+
 ## Independent commands
 
-The structural diff and image comparison are independent tools. Neither requires a
-migration run when two DOCX paths already exist.
+The structural diff and image comparison need no migration when two DOCX paths exist.
 
 Structural diff through the public SuperDoc SDK:
 
@@ -63,10 +75,9 @@ pnpm verify-migration -- /external/document-or-directory \
   --out /tmp/migration-verification/run --timeout-ms 180000 --keep-images
 ```
 
-This always writes `report.csv`. `--keep-images` additionally retains per-document
-page PNGs, triptychs, JSON, and HTML under the output directory. Without the flag,
-the command records image metrics in the CSV and deletes temporary page images.
-Structural differences do not prevent the image comparison from running.
+This writes `report.csv`. `--keep-images` retains per-document PNGs, triptychs, JSON,
+and HTML; otherwise it records metrics and deletes temporary page images. Structural
+differences do not prevent image comparison.
 
 The default runs both comparisons. Add `--diff-only` for structural comparison only
 or `--image-only` for image comparison only. The flags are mutually exclusive. The
