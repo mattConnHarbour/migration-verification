@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, positiveInteger } from "./args.mjs";
 import { compareDocumentStructure } from "./compare-document-structure.mjs";
-import { compareImages } from "./image-compare.mjs";
+import { compareImages } from "./compare-document-image.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

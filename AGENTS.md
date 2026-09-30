@@ -32,7 +32,7 @@ scripts/main.mjs
     └── scripts/run-migration-verification.mjs
         ├── scripts/migrate-collaboration-document.mjs
         ├── scripts/compare-document-structure.mjs
-        └── scripts/image-compare.mjs
+        └── scripts/compare-document-image.mjs
 ```
 
 `scripts/main.mjs` is the CLI boundary; the facade delegates to the orchestrator.

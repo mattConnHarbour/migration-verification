@@ -31,11 +31,11 @@ pnpm verify-migration
         └── scripts/run-migration-verification.mjs
             ├── scripts/migrate-collaboration-document.mjs
             ├── scripts/compare-document-structure.mjs   (--diff-only or default)
-            └── scripts/image-compare.mjs                (--image-only or default)
+            └── scripts/compare-document-image.mjs       (--image-only or default)
 
 pnpm migrate       -> scripts/migrate-collaboration-document.mjs
 pnpm diff          -> scripts/compare-document-structure.mjs
-pnpm image-compare -> scripts/image-compare.mjs
+pnpm image-compare -> scripts/compare-document-image.mjs
 ```
 
 `main.mjs` is the CLI boundary. It delegates through
