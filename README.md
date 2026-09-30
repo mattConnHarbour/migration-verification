@@ -59,9 +59,8 @@ pnpm install --frozen-lockfile
 pnpm run browser:install
 ```
 
-The collaboration-upgrade package is included under `vendor/` because the package
-build being verified is not yet installed from the public npm registry. All other
-dependencies are pinned npm packages.
+All dependencies are pinned npm packages, including the public
+`@superdoc/v2-collaboration-upgrade` migration package.
 
 ## Migrate and export only
 
