@@ -13,7 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 async function runMigration(input, output, timeoutMs) {
   return await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
-      path.join(root, "scripts/migrate-and-export.mjs"),
+      path.join(root, "scripts/migrate-collaboration-document.mjs"),
       input,
       "--out", output,
       "--timeout-ms", String(timeoutMs),
