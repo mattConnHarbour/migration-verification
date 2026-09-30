@@ -1,14 +1,14 @@
 # Migration verification agent guide
 
-This standalone local customer tool must run without Orbit or SuperDoc Labs access.
+This is a standalone local document-migration verification tool.
 
 ## Safety and repository boundaries
 
-- Never add customer documents, exported documents, screenshots, reports, or other
+- Never add input documents, exported documents, screenshots, reports, or other
   run artifacts to this repository. Pass document paths from outside the checkout
   and write results to an external directory such as `/tmp/migration-verification`.
 - `*.docx`, `output/`, and run artifacts are ignored as a backstop, not as permission
-  to copy customer data into the checkout.
+  to copy document data into the checkout.
 - All document servers must bind to `127.0.0.1`. Do not upload documents or add
   network-backed rendering.
 - Keep package versions pinned. Version changes alter the system being measured and
@@ -92,14 +92,16 @@ CSV must mark the unselected stage `skipped`, not failed.
 4. Use `<out>/report.json` for exact changed-pixel ratios and page dimensions.
 5. Treat page-count mismatches as differences even if all paired pages match.
 6. Keep the report and page PNGs outside the repository because they contain
-   customer document content.
+   potentially sensitive document content.
 
 The default pixel threshold is `0.1`, and a page is changed when more than `0.001`
-of its pixels differ. Do not loosen either threshold to turn a failure green. If
-font or platform variance requires a threshold change, record the environment and
-retain the original report for review.
+of its pixels differ. Do not loosen thresholds to turn a failure green. Record the
+environment and retain the original report when platform variance requires a change.
 
 ## Verification before handoff
+
+`pnpm verify` tests structural and image comparison with runtime-only identical and
+changed DOCX pairs in the system temporary directory; never commit those fixtures.
 
 Run all of the following after code or dependency changes:
 
@@ -114,6 +116,5 @@ pnpm verify-migration -- /external/control.docx \
   --out /tmp/migration-verification/control-sequence --keep-images
 ```
 
-The identical-file controls must report `same: true`, identical page counts, and
-zero changed pages. For migration changes, also run one representative document
-through `pnpm migrate`, then image-compare its two exports.
+Identical-file controls must report `same: true`, equal page counts, and zero changed
+pages. For migration changes, migrate one representative document and compare exports.

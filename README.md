@@ -1,7 +1,6 @@
 # Migration verification
 
 Standalone verification tools for a SuperDoc v1 collaboration-room migration to v2.
-The repository does not require an Orbit checkout and does not contact SuperDoc Labs.
 
 ## What it does
 
@@ -103,7 +102,7 @@ the output root, with one document directory under `documents/` for each input.
 triptychs, `report.json`, and browsable `index.html` under `documents/<id>/images/`,
 and the CSV links to those reports. Without it, image generation uses a temporary
 directory and the CSV retains the visual verdict and metrics without retaining
-customer-content images.
+document-content images.
 
 By default both comparison engines run. Select exactly one when needed:
 
@@ -164,7 +163,18 @@ The default pixel threshold is `0.1`; a page is reported changed when more than
 
 All servers bind to `127.0.0.1`, use ephemeral ports, and stop when the command
 finishes. Documents remain on the local machine. Output directories can contain the
-full customer document and must be handled with the same controls as the input.
+the full input document and must be handled with the same controls as the source.
+
+## Tests
+
+```bash
+pnpm verify
+```
+
+The test suite generates synthetic identical and changed v1/v2 DOCX pairs in the
+system temporary directory. It verifies both the public structural diff and rendered
+page-image comparison, then removes the fixtures and reports. No binary fixtures or
+input documents are stored in the repository.
 
 ## Version policy
 
