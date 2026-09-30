@@ -6,7 +6,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, positiveInteger } from "./args.mjs";
-import { compareDocumentStructure } from "./compare/structure.mjs";
 import { compareImages } from "./compare/image.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,10 +58,9 @@ function csvCell(value) {
 
 function writeCsv(rows) {
   const headers = [
-    "document", "migration_status", "diff_status", "structural_same", "changed_components",
-    "image_status", "visual_same", "reference_pages", "candidate_pages",
+    "document", "migration_status", "image_status", "visual_same", "reference_pages", "candidate_pages",
     "changed_pages", "failure_reason", "v1_export", "v2_export",
-    "migration_report", "diff_report", "image_report", "html_report", "images_retained",
+    "migration_report", "image_report", "html_report", "images_retained",
   ];
   return `${[headers, ...rows.map((row) => headers.map((header) => row[header] ?? ""))]
     .map((row) => row.map(csvCell).join(","))
@@ -71,7 +69,7 @@ function writeCsv(rows) {
 
 export async function runMigrationVerification(argv = process.argv.slice(2)) {
   const { positional: [input], flags } = parseArgs(argv, 1, {
-    booleanFlags: ["keep-images", "diff-only", "image-only"],
+    booleanFlags: ["keep-images", "image-only"],
   });
   const out = flags.get("out");
   if (typeof out !== "string") throw new Error("--out is required");
@@ -80,11 +78,6 @@ export async function runMigrationVerification(argv = process.argv.slice(2)) {
   const pixelThreshold = Number(flags.get("pixel-threshold") ?? "0.1");
   const changedRatioThreshold = Number(flags.get("changed-ratio-threshold") ?? "0.001");
   const keepImages = flags.get("keep-images") === true;
-  const diffOnly = flags.get("diff-only") === true;
-  const imageOnly = flags.get("image-only") === true;
-  if (diffOnly && imageOnly) throw new Error("--diff-only and --image-only are mutually exclusive");
-  const runDiff = !imageOnly;
-  const runImage = !diffOnly;
   await mkdir(outputRoot, { recursive: true });
   if ((await readdir(outputRoot)).length > 0) throw new Error("--out must be empty");
 
@@ -104,10 +97,7 @@ export async function runMigrationVerification(argv = process.argv.slice(2)) {
     const row = {
       document: path.basename(document),
       migration_status: migration.code === 0 ? "completed" : "failed",
-      diff_status: runDiff ? "not_run" : "skipped",
-      structural_same: "",
-      changed_components: "",
-      image_status: runImage ? "not_run" : "skipped",
+      image_status: "not_run",
       visual_same: "",
       reference_pages: "",
       candidate_pages: "",
@@ -116,33 +106,13 @@ export async function runMigrationVerification(argv = process.argv.slice(2)) {
       v1_export: path.join(migrationRoot, "ingested-v1.docx"),
       v2_export: path.join(migrationRoot, "ingested-v2.docx"),
       migration_report: path.join(migrationRoot, "report.json"),
-      diff_report: "",
       image_report: "",
       html_report: "",
-      images_retained: runImage && keepImages ? "yes" : "no",
+      images_retained: keepImages ? "yes" : "no",
     };
 
     if (migration.code !== 0) {
       row.failure_reason = (migration.stderr || migration.stdout || `migration exited ${migration.signal ?? migration.code}`).trim();
-      rows.push(row);
-      continue;
-    }
-
-    if (runDiff) {
-      try {
-        const diff = await compareDocumentStructure(row.v1_export, row.v2_export, timeoutMs);
-        row.diff_status = "completed";
-        row.structural_same = diff.same ? "yes" : "no";
-        row.changed_components = diff.changedComponents.join(";");
-        row.diff_report = path.join(documentRoot, "structural-diff.json");
-        await writeFile(row.diff_report, `${JSON.stringify(diff, null, 2)}\n`);
-      } catch (error) {
-        row.diff_status = "failed";
-        row.failure_reason = error instanceof Error ? error.stack ?? error.message : String(error);
-      }
-    }
-
-    if (!runImage) {
       rows.push(row);
       continue;
     }
@@ -182,19 +152,17 @@ export async function runMigrationVerification(argv = process.argv.slice(2)) {
   const summary = {
     documents: rows.length,
     migrationsCompleted: rows.filter((row) => row.migration_status === "completed").length,
-    diffsCompleted: rows.filter((row) => row.diff_status === "completed").length,
     imagesCompleted: rows.filter((row) => row.image_status === "completed").length,
-    structurallySame: rows.filter((row) => row.structural_same === "yes").length,
     visuallySame: rows.filter((row) => row.visual_same === "yes").length,
-    failures: rows.filter((row) => row.migration_status === "failed" || row.diff_status === "failed" || row.image_status === "failed").length,
-    comparisonMode: diffOnly ? "diff" : imageOnly ? "image" : "both",
-    imagesRetained: runImage && keepImages,
+    failures: rows.filter((row) => row.migration_status === "failed" || row.image_status === "failed").length,
+    comparisonMode: "image",
+    imagesRetained: keepImages,
     csv: csvPath,
   };
   await writeFile(path.join(outputRoot, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
-  if (rows.some((row) => row.migration_status === "failed" || row.diff_status === "failed" || row.image_status === "failed")) process.exitCode = 1;
-  else if (rows.some((row) => row.structural_same === "no" || row.visual_same === "no")) process.exitCode = 2;
+  if (rows.some((row) => row.migration_status === "failed" || row.image_status === "failed")) process.exitCode = 1;
+  else if (rows.some((row) => row.visual_same === "no")) process.exitCode = 2;
 }
 
 if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {

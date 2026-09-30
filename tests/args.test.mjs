@@ -14,9 +14,10 @@ test("positiveInteger rejects invalid timeouts", () => {
 });
 
 test("parseArgs accepts declared boolean flags", () => {
-  const result = parseArgs(["a.docx", "--keep-images", "--out", "result"], 1, {
-    booleanFlags: ["keep-images"],
+  const result = parseArgs(["a.docx", "--image-only", "--keep-images", "--out", "result"], 1, {
+    booleanFlags: ["image-only", "keep-images"],
   });
+  assert.equal(result.flags.get("image-only"), true);
   assert.equal(result.flags.get("keep-images"), true);
   assert.equal(result.flags.get("out"), "result");
 });

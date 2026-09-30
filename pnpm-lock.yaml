@@ -14,9 +14,6 @@ importers:
       '@hocuspocus/server':
         specifier: 2.15.3
         version: 2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31)
-      '@superdoc/sdk':
-        specifier: 2.16.0-next.11
-        version: 2.16.0-next.11
       '@superdoc/v2-collaboration-upgrade':
         specifier: 0.1.0-alpha.5
         version: 0.1.0-alpha.5(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.2)(prosemirror-view@1.42.6)(superdoc@2.19.0-next.10(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(yjs@13.6.31))(y-prosemirror@1.3.7(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-view@1.42.6)(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(y-websocket@3.1.0(yjs@13.6.31))(yjs@13.6.31)
@@ -465,39 +462,6 @@ packages:
         optional: true
       y-websocket:
         optional: true
-
-  '@superdoc/sdk-darwin-arm64@2.16.0-next.11':
-    resolution: {integrity: sha512-WlmnjO5NJox4Df06svP72A94Ph9qj2UvMghiKOQGd+5NwD22PPtopp4gfbClxHhgFM1OPxxxV7BmbUlTEF07xw==}
-    cpu: [arm64]
-    os: [darwin]
-    hasBin: true
-
-  '@superdoc/sdk-darwin-x64@2.16.0-next.11':
-    resolution: {integrity: sha512-7yOq49MRs+5GnD0EH0+cL9zKEvbv4EjlH+XkNZR/ciWX6DZtP/C9CLhShUeP1H/M1qJOD7u2RvLkbIs/0Rfx0w==}
-    cpu: [x64]
-    os: [darwin]
-    hasBin: true
-
-  '@superdoc/sdk-linux-arm64@2.16.0-next.11':
-    resolution: {integrity: sha512-RtzP/YUh31Bdmznu/Fc3KTiE5PA5LikAxUBSysQ7B+u+LpPQUkxWk+RgMExK2++DqIsmzlgEKS7rgqXogu2xIg==}
-    cpu: [arm64]
-    os: [linux]
-    hasBin: true
-
-  '@superdoc/sdk-linux-x64@2.16.0-next.11':
-    resolution: {integrity: sha512-UOwQLcPx9sCtQ8x/8OoovGSgqm2X3jdmZb2I8bDuldlaYpFkLa55PI6KBk2fkolTlCBpFx/HHxQvchcizlzL2w==}
-    cpu: [x64]
-    os: [linux]
-    hasBin: true
-
-  '@superdoc/sdk-windows-x64@2.16.0-next.11':
-    resolution: {integrity: sha512-6h4LjSu6CDzeQXwLRQPcC2TiLgMXaJ+mZqLAtti0KKIpSCDYbewyyKvf9DlVx6Vef2wPHmnSowFFc96FGstXGQ==}
-    cpu: [x64]
-    os: [win32]
-    hasBin: true
-
-  '@superdoc/sdk@2.16.0-next.11':
-    resolution: {integrity: sha512-zR9gJOaZcBwgYUYJB30RpyfGpm8n3xQPtLi3AdWcjCl0wUwo/2sW99XDR8a1rOsgmCbfEAykSAf06osRP25W7A==}
 
   '@superdoc/v2-collaboration-upgrade@0.1.0-alpha.5':
     resolution: {integrity: sha512-AQshkFo4GUBoavqLz0ygu3EJ4DDo1n9+7Lvt7ne1JeNSTkydA/iL4rgvz8/FBk5CLU3HmigegIiIPNJlf2s5PQ==}
@@ -1519,29 +1483,6 @@ snapshots:
     optionalDependencies:
       '@hocuspocus/provider': 2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31)
       y-websocket: 3.1.0(yjs@13.6.31)
-
-  '@superdoc/sdk-darwin-arm64@2.16.0-next.11':
-    optional: true
-
-  '@superdoc/sdk-darwin-x64@2.16.0-next.11':
-    optional: true
-
-  '@superdoc/sdk-linux-arm64@2.16.0-next.11':
-    optional: true
-
-  '@superdoc/sdk-linux-x64@2.16.0-next.11':
-    optional: true
-
-  '@superdoc/sdk-windows-x64@2.16.0-next.11':
-    optional: true
-
-  '@superdoc/sdk@2.16.0-next.11':
-    optionalDependencies:
-      '@superdoc/sdk-darwin-arm64': 2.16.0-next.11
-      '@superdoc/sdk-darwin-x64': 2.16.0-next.11
-      '@superdoc/sdk-linux-arm64': 2.16.0-next.11
-      '@superdoc/sdk-linux-x64': 2.16.0-next.11
-      '@superdoc/sdk-windows-x64': 2.16.0-next.11
 
   '@superdoc/v2-collaboration-upgrade@0.1.0-alpha.5(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.2)(prosemirror-view@1.42.6)(superdoc@2.19.0-next.10(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(yjs@13.6.31))(y-prosemirror@1.3.7(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-view@1.42.6)(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(y-websocket@3.1.0(yjs@13.6.31))(yjs@13.6.31)':
     dependencies:

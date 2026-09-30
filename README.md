@@ -12,10 +12,10 @@ DOCX on disk
   -> export the ingested v1 document
   -> migrate into a separate v2 room
   -> join and export the v2 room through the public browser API
-  -> compare both exports through the public SDK diff API
+  -> render both exports and compare their page images
 ```
 
-The original v1 room is never changed. Generated diffs are reported but never applied.
+The original v1 room is never changed.
 
 The image command opens both exported DOCX files with the same public SuperDoc
 browser build, screenshots every page, and produces pixel diffs and a manual HTML
@@ -28,23 +28,21 @@ pnpm verify-migration
 └── scripts/main.mjs
     └── scripts/run-migration-verification.mjs
         ├── scripts/migrate-collaboration-document.mjs
-        ├── scripts/compare/structure.mjs   (--diff-only or default)
-        └── scripts/compare/image.mjs       (--image-only or default)
+        └── scripts/compare/image.mjs
 
 pnpm migrate       -> scripts/migrate-collaboration-document.mjs
-pnpm diff          -> scripts/compare/structure.mjs
 pnpm image-compare -> scripts/compare/image.mjs
 ```
 
 `main.mjs` is the CLI boundary. It calls the sequential orchestrator and CSV writer
 in `run-migration-verification.mjs`. The orchestrator always migrates first, then
-calls the selected comparison stages. The three stage scripts remain independently
+calls image comparison. Migration and image comparison remain independently
 executable. Shared CLI parsing lives in `scripts/args.mjs`; browser startup and
 readiness handling live in `scripts/browser-harness.mjs`.
 
 Use `verify-migration` for an end-to-end document or directory run, `migrate` when
-only exports are needed, and the independent `diff` or `image-compare` commands when
-reference and candidate DOCX files already exist.
+only exports are needed, and `image-compare` when reference and candidate DOCX files
+already exist.
 
 ## Requirements
 
@@ -79,8 +77,8 @@ Outputs:
 - `ingested-v2.docx` — public-browser export after joining the v2 room
 - `report.json` — migration receipt and artifact paths
 
-This command performs no structural or image comparison. Its exit code is `0` for a
-completed migration and `1` for an execution failure.
+This command performs no image comparison. Its exit code is `0` for a completed
+migration and `1` for an execution failure.
 
 ## Run the complete migration and image-verification sequence
 
@@ -94,9 +92,9 @@ pnpm verify-migration -- \
   --keep-images
 ```
 
-Documents are processed sequentially. A structural difference is a completed result,
-so image comparison still runs. The command writes `report.csv` and `summary.json` at
-the output root, with one document directory under `documents/` for each input.
+Documents are processed sequentially. The command writes `report.csv` and
+`summary.json` at the output root, with one document directory under `documents/`
+for each input.
 
 `--keep-images` is optional. When present, each document retains its page PNGs,
 triptychs, `report.json`, and browsable `index.html` under `documents/<id>/images/`,
@@ -104,42 +102,9 @@ and the CSV links to those reports. Without it, image generation uses a temporar
 directory and the CSV retains the visual verdict and metrics without retaining
 document-content images.
 
-By default both comparison engines run. Select exactly one when needed:
-
-```bash
-# Migration followed by structural diff only
-pnpm verify-migration -- /path/to/document-or-directory \
-  --out /tmp/migration-verification/diff-only --diff-only
-
-# Migration followed by image comparison only
-pnpm verify-migration -- /path/to/document-or-directory \
-  --out /tmp/migration-verification/image-only --image-only --keep-images
-```
-
-`--diff-only` and `--image-only` are mutually exclusive. The CSV marks the omitted
-stage as `skipped` and leaves its result columns empty.
-
 Exit codes are `0` when every comparison is the same, `2` when all work completed but
-at least one structural or visual comparison differs, and `1` when any migration or
-image comparison failed.
-
-## Compare any two DOCX files with the public diff API
-
-```bash
-pnpm diff -- \
-  "/path/to/reference.docx" \
-  "/path/to/candidate.docx" \
-  --out "/tmp/migration-verification/diff.json" \
-  --timeout-ms 180000
-```
-
-The JSON and CLI output include `summary.hasChanges`, every changed component,
-fingerprints, coverage, and the complete payload returned by `diff.compare()`.
-
-The browser export can legitimately normalize package-only content even when the
-document renders identically—for example, removing unused empty footnote/endnote
-parts. Those findings remain visible as a `parts` difference and can be reviewed
-alongside the image report.
+at least one visual comparison differs, and `1` when any migration or image
+comparison failed.
 
 ## Render and compare page images
 
@@ -163,7 +128,7 @@ The default pixel threshold is `0.1`; a page is reported changed when more than
 
 All servers bind to `127.0.0.1`, use ephemeral ports, and stop when the command
 finishes. Documents remain on the local machine. Output directories can contain the
-the full input document and must be handled with the same controls as the source.
+full input document and must be handled with the same controls as the source.
 
 ## Tests
 
@@ -172,12 +137,12 @@ pnpm verify
 ```
 
 The test suite generates synthetic identical and changed v1/v2 DOCX pairs in the
-system temporary directory. It verifies both the public structural diff and rendered
-page-image comparison, then removes the fixtures and reports. No binary fixtures or
-input documents are stored in the repository.
+system temporary directory. It verifies rendered page-image comparison, then removes
+the fixtures and reports. No binary fixtures or input documents are stored in the
+repository.
 
 ## Version policy
 
-`package.json` pins the SuperDoc browser and SDK prerelease versions used by the verification.
-Do not update them casually: a version change alters the system being measured and
-should produce a new reviewed verification release.
+`package.json` pins the SuperDoc browser version used by the verification. Do not
+update it casually: a version change alters the system being measured and should
+produce a new reviewed verification release.

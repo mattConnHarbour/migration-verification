@@ -10,14 +10,12 @@
     "browser:install": "playwright install chromium",
     "migrate": "node scripts/migrate-collaboration-document.mjs",
     "verify-migration": "node scripts/main.mjs",
-    "diff": "node scripts/compare/structure.mjs",
     "image-compare": "node scripts/compare/image.mjs",
     "verify": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@hocuspocus/server": "2.15.3",
     "@hocuspocus/provider": "2.15.3",
-    "@superdoc/sdk": "2.16.0-next.11",
     "@superdoc/v2-collaboration-upgrade": "0.1.0-alpha.5",
     "fflate": "0.8.2",
     "happy-dom": "20.4.0",

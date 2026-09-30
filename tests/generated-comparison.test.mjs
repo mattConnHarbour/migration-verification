@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
 import { compareImages } from "../scripts/compare/image.mjs";
-import { compareDocumentStructure } from "../scripts/compare/structure.mjs";
 import { writeSyntheticDocx } from "./helpers/synthetic-docx.mjs";
 
 const timeoutMs = 180_000;
@@ -33,7 +32,7 @@ before(async () => {
     ]),
     writeSyntheticDocx(fixtures.changedV2, [
       { text: "Synthetic migration fixture — changed", size: 48, bold: true },
-      { text: "This is the visibly and structurally different v2 document.", size: 32 },
+      { text: "This is the visibly different v2 document.", size: 32 },
       { text: "An additional paragraph makes the expected change unambiguous.", size: 32 },
     ]),
   ]);
@@ -41,17 +40,6 @@ before(async () => {
 
 after(async () => {
   await rm(workspace, { recursive: true, force: true });
-});
-
-test("structural comparison recognizes identical and changed generated pairs", { timeout: timeoutMs }, async () => {
-  const same = await compareDocumentStructure(fixtures.sameV1, fixtures.sameV2, timeoutMs);
-  assert.equal(same.same, true);
-  assert.deepEqual(same.changedComponents, []);
-
-  const changed = await compareDocumentStructure(fixtures.changedV1, fixtures.changedV2, timeoutMs);
-  assert.equal(changed.same, false);
-  assert.equal(changed.result.summary.hasChanges, true);
-  assert.ok(changed.changedComponents.length > 0);
 });
 
 test("image comparison recognizes identical and changed generated pairs", { timeout: timeoutMs }, async () => {

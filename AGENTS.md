@@ -13,7 +13,7 @@ This is a standalone local document-migration verification tool.
   network-backed rendering.
 - Keep package versions pinned. Version changes alter the system being measured and
   require a new end-to-end verification run.
-- Do not apply generated diffs. This repository only exports, analyzes, and renders.
+- This repository verifies documents exclusively through rendered page images.
 
 ## Setup
 
@@ -30,25 +30,14 @@ Use Node.js 20+; `pnpm run browser:install` installs the pinned Chromium build.
 scripts/main.mjs
 └── scripts/run-migration-verification.mjs
     ├── scripts/migrate-collaboration-document.mjs
-    ├── scripts/compare/structure.mjs
     └── scripts/compare/image.mjs
 ```
 
 `scripts/main.mjs` is the CLI boundary and calls the orchestrator directly.
 The orchestrator migrates, invokes selected comparisons, and writes reports.
-Migration stays comparison-free; both comparisons stay independently executable.
+Migration stays comparison-free; image comparison stays independently executable.
 
 ## Independent commands
-
-The structural diff and image comparison need no migration when two DOCX paths exist.
-
-Structural diff through the public SuperDoc SDK:
-
-```bash
-pnpm diff -- /external/reference.docx /external/candidate.docx \
-  --out /tmp/migration-verification/diff.json \
-  --timeout-ms 180000
-```
 
 Image comparison through the public SuperDoc browser package:
 
@@ -75,12 +64,7 @@ pnpm verify-migration -- /external/document-or-directory \
 ```
 
 This writes `report.csv`. `--keep-images` retains per-document PNGs, triptychs, JSON,
-and HTML; otherwise it records metrics and deletes temporary page images. Structural
-differences do not prevent image comparison.
-
-The default runs both comparisons. Add `--diff-only` for structural comparison only
-or `--image-only` for image comparison only. The flags are mutually exclusive. The
-CSV must mark the unselected stage `skipped`, not failed.
+and HTML; otherwise it records metrics and deletes temporary page images.
 
 ## Image verification procedure
 
@@ -100,16 +84,14 @@ environment and retain the original report when platform variance requires a cha
 
 ## Verification before handoff
 
-`pnpm verify` tests structural and image comparison with runtime-only identical and
-changed DOCX pairs in the system temporary directory; never commit those fixtures.
+`pnpm verify` tests image comparison with runtime-only identical and changed DOCX
+pairs in the system temporary directory; never commit those fixtures.
 
 Run all of the following after code or dependency changes:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm verify
-pnpm diff -- /external/control.docx /external/control.docx \
-  --out /tmp/migration-verification/control-diff.json
 pnpm image-compare -- /external/control.docx /external/control.docx \
   --out /tmp/migration-verification/control-images
 pnpm verify-migration -- /external/control.docx \
