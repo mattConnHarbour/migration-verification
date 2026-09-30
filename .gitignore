@@ -1,4 +1,8 @@
 node_modules/
 output/
+*.docx
+*.doc
+documents/
+artifacts/
 *.log
 .DS_Store
