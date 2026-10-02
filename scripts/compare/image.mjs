@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
@@ -45,6 +45,7 @@ export async function compareImages(referencePath, candidatePath, options) {
       changedRatioThreshold: options.changedRatioThreshold,
       pageSelection: options.pages ?? "all",
       profilePages: options.profilePages === true,
+      retainArtifacts: options.retainArtifacts !== false,
     });
   } finally {
     await browser.close();
@@ -263,33 +264,57 @@ async function compareRenderedDocuments(browser, options) {
         const candidateBytes = await candidateElement.screenshot({ animations: "disabled" });
         const candidateCaptureMs = performance.now() - captureStarted;
         const prefix = `page-${String(index + 1).padStart(4, "0")}`;
-        const candidateWriteStarted = performance.now();
-        await writeFile(path.join(options.candidateDir, `${prefix}.png`), candidateBytes);
-        let candidateArtifactWriteMs = performance.now() - candidateWriteStarted;
+        let candidateArtifactWriteMs = 0;
         const compareStarted = performance.now();
-        const referenceBytes = await readFile(path.join(options.referenceDir, `${prefix}.png`));
-        const reference = PNG.sync.read(referenceBytes);
-        const candidate = PNG.sync.read(candidateBytes);
-        const normalized = normalizePair(reference, candidate);
-        const diff = new PNG({ width: normalized.width, height: normalized.height });
-        const changedPixels = pixelmatch(
-          normalized.reference.data,
-          normalized.candidate.data,
-          diff.data,
-          normalized.width,
-          normalized.height,
-          { threshold: options.pixelThreshold },
-        );
-        const changedPixelRatio = changedPixels / (normalized.width * normalized.height);
-        const changed = changedPixelRatio > options.changedRatioThreshold;
+        const referencePath = path.join(options.referenceDir, `${prefix}.png`);
+        const referenceBytes = await readFile(referencePath);
+        const exactMatch = referenceBytes.equals(candidateBytes);
+        let reference;
+        let candidate;
+        let normalized;
+        let diff;
+        let changedPixels = 0;
+        let changedPixelRatio = 0;
+        let changed = false;
+        const referenceSize = pngDimensions(referenceBytes);
+        const candidateSize = pngDimensions(candidateBytes);
+        if (!exactMatch) {
+          reference = PNG.sync.read(referenceBytes);
+          candidate = PNG.sync.read(candidateBytes);
+          normalized = normalizePair(reference, candidate);
+          diff = new PNG({ width: normalized.width, height: normalized.height });
+          changedPixels = pixelmatch(
+            normalized.reference.data,
+            normalized.candidate.data,
+            diff.data,
+            normalized.width,
+            normalized.height,
+            { threshold: options.pixelThreshold },
+          );
+          changedPixelRatio = changedPixels / (normalized.width * normalized.height);
+          changed = changedPixelRatio > options.changedRatioThreshold;
+        }
         const compareMs = performance.now() - compareStarted;
-        const reportWriteStarted = performance.now();
-        await writeFile(path.join(options.diffDir, `${prefix}-diff.png`), PNG.sync.write(diff));
-        await writeFile(
-          path.join(options.diffDir, `${prefix}-triptych.png`),
-          PNG.sync.write(triptych(normalized.reference, normalized.candidate, diff)),
-        );
-        candidateArtifactWriteMs += performance.now() - reportWriteStarted;
+        const writeComparisonArtifacts = options.retainArtifacts || changed;
+        let triptychName = null;
+        if (writeComparisonArtifacts) {
+          const reportWriteStarted = performance.now();
+          await writeFile(path.join(options.candidateDir, `${prefix}.png`), candidateBytes);
+          if (exactMatch) {
+            reference = PNG.sync.read(referenceBytes);
+            candidate = PNG.sync.read(candidateBytes);
+            normalized = normalizePair(reference, candidate);
+            diff = whiteCanvas(normalized.width, normalized.height);
+          }
+          await writeFile(path.join(options.diffDir, `${prefix}-diff.png`), PNG.sync.write(diff));
+          triptychName = `${prefix}-triptych.png`;
+          await writeFile(
+            path.join(options.diffDir, triptychName),
+            PNG.sync.write(triptych(normalized.reference, normalized.candidate, diff)),
+          );
+          candidateArtifactWriteMs = performance.now() - reportWriteStarted;
+        }
+        if (!options.retainArtifacts) await unlink(referencePath);
         memory = await memorySampler.stop();
         const referenceProfile = referenceProfiles.get(index);
         pages.push({
@@ -298,9 +323,10 @@ async function compareRenderedDocuments(browser, options) {
           changed,
           changedPixels,
           changedPixelRatio,
-          referenceSize: [reference.width, reference.height],
-          candidateSize: [candidate.width, candidate.height],
-          triptych: `${prefix}-triptych.png`,
+          referenceSize,
+          candidateSize,
+          triptych: triptychName,
+          exactPngMatch: exactMatch,
           performance: {
             totalMs: (referenceProfile?.totalMs ?? 0) + (performance.now() - pageStarted),
             captureMs: (referenceProfile?.captureMs ?? 0) + candidateCaptureMs,
@@ -339,6 +365,14 @@ async function compareRenderedDocuments(browser, options) {
   }
 }
 
+function pngDimensions(bytes) {
+  const signature = "89504e470d0a1a0a";
+  if (bytes.length < 24 || bytes.subarray(0, 8).toString("hex") !== signature) {
+    throw new Error("Screenshot was not a valid PNG");
+  }
+  return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
+}
+
 function whiteCanvas(width, height) {
   const result = new PNG({ width, height });
   result.data.fill(255);
@@ -373,7 +407,7 @@ function escapeHtml(value) {
 }
 
 function htmlReport(report) {
-  const rows = report.pages.map((page) => `<section><h2>Page ${page.page}: ${page.changed ? "changed" : "same"}</h2>${page.triptych ? `<img src="diff/${page.triptych}" alt="Reference, candidate, and difference for page ${page.page}">` : "<p>Page missing from one document.</p>"}</section>`).join("\n");
+  const rows = report.pages.map((page) => `<section><h2>Page ${page.page}: ${page.changed ? "changed" : "same"}</h2>${page.triptych ? `<img src="diff/${page.triptych}" alt="Reference, candidate, and difference for page ${page.page}">` : "<p>Page-image artifacts were not retained.</p>"}</section>`).join("\n");
   return `<!doctype html><html><head><meta charset="utf-8"><title>DOCX image comparison</title><style>body{font:14px system-ui;margin:24px;background:#eee}img{max-width:100%;background:white}section{margin:32px 0}code{word-break:break-all}</style></head><body><h1>${escapeHtml(report.verdict)}</h1><p><code>${escapeHtml(report.reference)}</code><br><code>${escapeHtml(report.candidate)}</code></p><p>${report.referencePageCount} reference pages, ${report.candidatePageCount} candidate pages, ${report.comparedPageCount} compared, ${report.uncheckedPageCount} unchecked, ${report.changedPageCount} changed.</p>${rows}</body></html>`;
 }
 

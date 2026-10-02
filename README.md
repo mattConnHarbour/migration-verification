@@ -128,6 +128,13 @@ Only one document renderer and one decoded page pair are active during compariso
 This preserves sampling and fail-fast behavior without keeping reference and
 candidate SuperDoc renderers resident at the same time.
 
+When `--keep-images` is omitted, reference screenshots are temporary disk buffers
+and are deleted immediately after their candidate page is compared. Candidate
+screenshots remain in memory, and passing pages do not write candidate, difference,
+or triptych PNGs. Byte-identical reference and candidate PNGs bypass decoding and
+pixel comparison. Changed pages still write diagnostic artifacts inside the
+temporary run directory before it is cleaned up.
+
 A successful sample reports `sampled_pass`, not `same`, because unchecked pages may
 still differ. Page-count mismatches are detected before sampling and immediately
 report `different`.

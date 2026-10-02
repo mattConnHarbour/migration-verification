@@ -156,6 +156,7 @@ export async function runMigrationVerification(argv = process.argv.slice(2)) {
         changedRatioThreshold,
         pages,
         profilePages,
+        retainArtifacts: keepImages,
       });
       row.image_status = "completed";
       row.comparison_verdict = image.verdict;

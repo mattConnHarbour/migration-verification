@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
@@ -48,18 +48,26 @@ test("image comparison recognizes identical and changed generated pairs", { time
     timeoutMs,
     pixelThreshold: 0.1,
     changedRatioThreshold: 0.001,
+    retainArtifacts: false,
   });
   assert.equal(same.same, true);
   assert.equal(same.changedPageCount, 0);
   assert.equal(same.referencePageCount, same.candidatePageCount);
+  const samePngs = (await Promise.all(["reference", "candidate", "diff"].map(async (directory) =>
+    (await readdir(path.join(workspace, "same-images", directory))).filter((name) => name.endsWith(".png")),
+  ))).flat();
+  assert.deepEqual(samePngs, []);
+  assert.ok(same.pages.every((page) => page.exactPngMatch));
 
   const changed = await compareImages(fixtures.changedV1, fixtures.changedV2, {
     out: path.join(workspace, "changed-images"),
     timeoutMs,
     pixelThreshold: 0.1,
     changedRatioThreshold: 0.001,
+    retainArtifacts: false,
   });
   assert.equal(changed.same, false);
   assert.ok(changed.changedPageCount > 0);
   assert.ok(changed.pages.some((page) => page.changedPixelRatio > 0.001));
+  assert.ok((await readdir(path.join(workspace, "changed-images", "diff"))).some((name) => name.endsWith("-triptych.png")));
 });
