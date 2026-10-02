@@ -89,6 +89,7 @@ pnpm verify-migration -- \
   "/path/to/document-or-directory" \
   --out "/tmp/migration-verification/run" \
   --timeout-ms 180000 \
+  --pages all \
   --keep-images
 ```
 
@@ -106,6 +107,31 @@ Exit codes are `0` when every comparison is the same, `2` when all work complete
 at least one visual comparison differs, and `1` when any migration or image
 comparison failed.
 
+`--pages all` is the default and performs an exhaustive comparison. For a bounded
+screening run, pass a positive sample size such as `--pages 10`. Sampled pages are
+ordered by progressive midpoint sampling: the first page, last page, midpoint, then
+the midpoints of progressively smaller intervals. Comparison always stops at the
+first changed page.
+
+Image comparison uses a sequential two-pass renderer to keep memory bounded:
+
+1. Open only the reference DOCX and determine its page count.
+2. Capture selected reference pages in progressive-midpoint order to local PNGs.
+3. Fully close the reference browser context and release its renderer.
+4. Open only the candidate DOCX and reject page-count mismatches immediately.
+5. Capture each selected candidate page, load its matching reference PNG, compare,
+   write metrics/artifacts, and discard the decoded buffers.
+6. Stop at the first changed page; otherwise continue through the requested sample
+   or every page for `--pages all`.
+
+Only one document renderer and one decoded page pair are active during comparison.
+This preserves sampling and fail-fast behavior without keeping reference and
+candidate SuperDoc renderers resident at the same time.
+
+A successful sample reports `sampled_pass`, not `same`, because unchecked pages may
+still differ. Page-count mismatches are detected before sampling and immediately
+report `different`.
+
 ## Render and compare page images
 
 ```bash
@@ -113,6 +139,7 @@ pnpm image-compare -- \
   "/tmp/migration-verification/document/ingested-v1.docx" \
   "/tmp/migration-verification/document/ingested-v2.docx" \
   --out "/tmp/migration-verification/document/images" \
+  --pages all \
   --timeout-ms 180000
 ```
 
@@ -123,6 +150,44 @@ also retained.
 The default pixel threshold is `0.1`; a page is reported changed when more than
 `0.001` of its pixels differ. Override these with `--pixel-threshold` and
 `--changed-ratio-threshold`.
+
+Use `--pages <N>` to compare at most `N` page pairs or `--pages all` for a definitive
+comparison. The report records the selected order, pages actually compared, and
+unchecked page count. Even in all-page mode, comparison fails fast on the first
+difference.
+
+Add `--profile-pages` to record time and summed process-tree RSS for each compared
+page pair. With `verify-migration`, the output root receives `page-performance.csv`
+with one row per page pair, including capture, comparison, artifact-write, and total
+duration plus minimum, average, median, p95, and maximum RSS. Profiling samples every
+100 milliseconds during both the reference-capture and candidate-compare windows;
+the row combines those samples and exposes separate reference/candidate capture
+durations. Profiling adds measurement overhead, so compare profiled runs only with
+other profiled runs.
+
+### Performance report generators
+
+Keep generated CSV and HTML reports outside the checkout. To combine a main run
+with isolated retries, pass each page-performance CSV to the consolidator:
+
+```bash
+node report-generators/consolidate-page-performance.mjs \
+  --out /tmp/migration-verification/page-performance-consolidated.csv \
+  /tmp/migration-verification/main/page-performance.csv \
+  /tmp/migration-verification/retries/*/page-performance.csv
+```
+
+Generate a self-contained interactive D3 chart from that CSV:
+
+```bash
+node report-generators/generate-page-memory-chart.mjs \
+  /tmp/migration-verification/page-performance-consolidated.csv \
+  --out /tmp/migration-verification/page-memory-interactive.html
+```
+
+The chart contains only the profiled page-comparison measurements. It plots total
+profiled page time on the x-axis and process-tree RSS on the y-axis, with minimum,
+median page peak, and maximum memory for every document.
 
 ## Security and data handling
 

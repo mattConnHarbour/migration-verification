@@ -28,5 +28,7 @@
     "y-protocols": "1.0.7",
     "yjs": "13.6.31"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "d3": "7.9.0"
+  }
 }
