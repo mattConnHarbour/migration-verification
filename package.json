@@ -8,10 +8,11 @@
   },
   "scripts": {
     "browser:install": "playwright install chromium",
+    "python:install": "python3 -m venv .venv && .venv/bin/python -m pip install --requirement requirements.txt && .venv/bin/playwright install chromium",
     "migrate": "node scripts/migrate-collaboration-document.mjs",
-    "verify-migration": "node scripts/main.mjs",
-    "image-compare": "node scripts/compare/image.mjs",
-    "verify": "node --test tests/*.test.mjs"
+    "verify-migration": ".venv/bin/python migration_verification.py verify-migration",
+    "image-compare": ".venv/bin/python migration_verification.py image-compare",
+    "verify": "node --test tests/*.test.mjs && .venv/bin/python -m unittest discover -s tests -p 'test_*.py'"
   },
   "dependencies": {
     "@hocuspocus/server": "2.15.3",
@@ -19,9 +20,7 @@
     "@superdoc/v2-collaboration-upgrade": "0.1.0-alpha.5",
     "fflate": "0.8.2",
     "happy-dom": "20.4.0",
-    "pixelmatch": "7.1.0",
     "playwright": "1.55.1",
-    "pngjs": "7.0.0",
     "superdoc": "2.19.0-next.10",
     "superdoc-final-v1": "npm:superdoc@1.44.1",
     "vite": "7.1.7",

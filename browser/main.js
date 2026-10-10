@@ -4,6 +4,8 @@ import "./style.css";
 
 const params = new URLSearchParams(location.search);
 const mode = params.get("mode") ?? "document";
+const virtualizationWindow = Number(params.get("virtualizationWindow") ?? "5");
+const virtualizationOverscan = Number(params.get("virtualizationOverscan") ?? "1");
 const response = await fetch(params.get("fixture") ?? "/fixture.docx");
 if (!response.ok) throw new Error(`Fixture request failed: ${response.status}`);
 const data = await response.blob();
@@ -34,6 +36,13 @@ const config = {
   selector: "#editor",
   documentMode: "viewing",
   pagination: true,
+  layoutEngineOptions: {
+    virtualization: {
+      enabled: true,
+      window: virtualizationWindow,
+      overscan: virtualizationOverscan,
+    },
+  },
   onReady: mode === "document" ? ready : undefined,
   onCollaborationReady: mode === "collaboration" ? ready : undefined,
   onContentError: ({ error }) => {

@@ -1,6 +1,8 @@
 # Migration verification
 
 Standalone verification tools for a SuperDoc v1 collaboration-room migration to v2.
+Python orchestrates verification and OpenCV/NumPy compare rendered pages. Migration
+and rendering still use the pinned SuperDoc JavaScript packages being measured.
 
 ## What it does
 
@@ -18,27 +20,29 @@ DOCX on disk
 The original v1 room is never changed.
 
 The image command opens both exported DOCX files with the same public SuperDoc
-browser build, screenshots every page, and produces pixel diffs and a manual HTML
-report.
+browser build and compares selected rendered pages, stopping at the first difference.
+Diagnostics level 2 retains pixel diffs and a manual HTML report.
 
 ## Command and script hierarchy
 
 ```text
-pnpm verify-migration
-└── scripts/main.mjs
-    └── scripts/run-migration-verification.mjs
-        ├── scripts/migrate-collaboration-document.mjs
-        └── scripts/compare/image.mjs
+pnpm verify-migration -> migration_verification.py
+    ├── scripts/migrate-collaboration-document.mjs
+    ├── prebuilt browser/* bundle + local static server
+    └── OpenCV rendered-image comparison
 
-pnpm migrate       -> scripts/migrate-collaboration-document.mjs
-pnpm image-compare -> scripts/compare/image.mjs
+pnpm migrate         -> scripts/migrate-collaboration-document.mjs
+pnpm image-compare   -> migration_verification.py
 ```
 
-`main.mjs` is the CLI boundary. It calls the sequential orchestrator and CSV writer
-in `run-migration-verification.mjs`. The orchestrator always migrates first, then
-calls image comparison. Migration and image comparison remain independently
-executable. Shared CLI parsing lives in `scripts/args.mjs`; browser startup and
-readiness handling live in `scripts/browser-harness.mjs`.
+`migration_verification.py` processes documents sequentially, invokes migration,
+drives the browser renderer with Python Playwright, compares screenshots with
+OpenCV, profiles time and process-tree memory, and writes reports.
+
+The browser application is bundled once into the system temporary directory and
+served from a minimal server bound to `127.0.0.1`. Vite is never resident during
+profiling. Reference and candidate passes use separate Chromium processes so browser
+caches and renderer state are reclaimed between passes.
 
 Use `verify-migration` for an end-to-end document or directory run, `migrate` when
 only exports are needed, and `image-compare` when reference and candidate DOCX files
@@ -48,17 +52,18 @@ already exist.
 
 - Node.js 20 or newer
 - pnpm 10
+- Python 3.13
 - macOS or Linux with the libraries required by Playwright Chromium
 
 ## Setup
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm run browser:install
+pnpm run python:install
 ```
 
-All dependencies are pinned npm packages, including the public
-`@superdoc/v2-collaboration-upgrade` migration package.
+All npm and Python dependencies are pinned. `python:install` creates `.venv`, installs
+`requirements.txt`, and installs the matching Chromium build.
 
 ## Migrate and export only
 
@@ -90,18 +95,24 @@ pnpm verify-migration -- \
   --out "/tmp/migration-verification/run" \
   --timeout-ms 180000 \
   --pages all \
-  --keep-images
+  --diagnostics 1
 ```
 
-Documents are processed sequentially. The command writes `report.csv` and
-`summary.json` at the output root, with one document directory under `documents/`
-for each input.
+Documents are processed sequentially, and every diagnostics level writes
+`report.csv`. Retained document directories and `summary.json` are added only at
+diagnostics level 2.
 
-`--keep-images` is optional. When present, each document retains its page PNGs,
-triptychs, `report.json`, and browsable `index.html` under `documents/<id>/images/`,
-and the CSV links to those reports. Without it, image generation uses a temporary
-directory and the CSV retains the visual verdict and metrics without retaining
-document-content images.
+Diagnostics levels control profiling and retained artifacts:
+
+- `--diagnostics 0` runs the gate without profiling or retained image diagnostics.
+- `--diagnostics 1` profiles time and process-tree RSS, keeps all working documents
+  and images temporary, then writes only `report.csv`, `page-performance.csv`, and
+  `page-memory-interactive.html` when the complete batch finishes.
+- `--diagnostics 2` adds retained migration exports, page PNGs, triptychs, per-document
+  JSON/HTML reports, and `summary.json`.
+
+The older `--profile-pages` and `--keep-images` flags remain compatible aliases for
+levels 1 and 2 respectively when `--diagnostics` is omitted.
 
 Exit codes are `0` when every comparison is the same, `2` when all work completed but
 at least one visual comparison differs, and `1` when any migration or image
@@ -147,16 +158,22 @@ pnpm image-compare -- \
   "/tmp/migration-verification/document/ingested-v2.docx" \
   --out "/tmp/migration-verification/document/images" \
   --pages all \
+  --diagnostics 2 \
   --timeout-ms 180000
 ```
 
-Open `images/index.html` for the manual report. Each row shows the reference page,
-candidate page, and pixel difference side by side. Raw page PNGs and JSON metrics are
-also retained.
+Open `images/index.html` for the manual report. Each changed-page row links to a
+triptych showing the reference page, candidate page, and pixel difference side by
+side. Raw page PNGs and JSON metrics are also retained.
 
-The default pixel threshold is `0.1`; a page is reported changed when more than
-`0.001` of its pixels differ. Override these with `--pixel-threshold` and
-`--changed-ratio-threshold`.
+The default per-channel pixel threshold is `0.1`. OpenCV creates a binary difference
+mask, closes nearby changed pixels with a 5×3 kernel, and labels connected
+components. A page is changed when its largest merged component exceeds 100 pixels.
+Override these with `--pixel-threshold`, `--component-area-threshold`,
+`--merge-width`, and `--merge-height`.
+
+The legacy global changed-pixel ratio and its `0.001` threshold remain in reports for
+calibration, but the verdict is based on the largest connected component.
 
 Use `--pages <N>` to compare at most `N` page pairs or `--pages all` for a definitive
 comparison. The report records the selected order, pages actually compared, and
@@ -170,7 +187,12 @@ duration plus minimum, average, median, p95, and maximum RSS. Profiling samples 
 100 milliseconds during both the reference-capture and candidate-compare windows;
 the row combines those samples and exposes separate reference/candidate capture
 durations. Profiling adds measurement overhead, so compare profiled runs only with
-other profiled runs.
+other profiled runs. Profiled runs also generate `page-memory-interactive.html`
+automatically from the CSV.
+
+Gate modes stop connected-component labeling as soon as a region exceeds the area
+threshold. Level 2 completes component labeling so its retained report can list all
+measured regions.
 
 ### Performance report generators
 

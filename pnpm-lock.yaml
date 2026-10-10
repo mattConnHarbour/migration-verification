@@ -23,15 +23,9 @@ importers:
       happy-dom:
         specifier: 20.4.0
         version: 20.4.0
-      pixelmatch:
-        specifier: 7.1.0
-        version: 7.1.0
       playwright:
         specifier: 1.55.1
         version: 1.55.1
-      pngjs:
-        specifier: 7.0.0
-        version: 7.0.0
       superdoc:
         specifier: 2.19.0-next.10
         version: 2.19.0-next.10(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(yjs@13.6.31)
@@ -1035,10 +1029,6 @@ packages:
       typescript:
         optional: true
 
-  pixelmatch@7.1.0:
-    resolution: {integrity: sha512-1wrVzJ2STrpmONHKBy228LM1b84msXDUoAzVEl0R8Mz4Ce6EPr+IVtxm8+yvrqLYMHswREkjYFaMxnyGnaY3Ng==}
-    hasBin: true
-
   playwright-core@1.55.1:
     resolution: {integrity: sha512-Z6Mh9mkwX+zxSlHqdr5AOcJnfp+xUWLCt9uKV18fhzA8eyxUd8NUWzAjxUh55RZKSYwDGX0cfaySdhZJGMoJ+w==}
     engines: {node: '>=18'}
@@ -1048,10 +1038,6 @@ packages:
     resolution: {integrity: sha512-cJW4Xd/G3v5ovXtJJ52MAOclqeac9S/aGGgRzLabuF8TnIb6xHvMzKIa6JmrRzUkeXJgfL1MhukP0NK6l39h3A==}
     engines: {node: '>=18'}
     hasBin: true
-
-  pngjs@7.0.0:
-    resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
-    engines: {node: '>=14.19.0'}
 
   postcss@8.5.28:
     resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
@@ -2285,10 +2271,6 @@ snapshots:
       '@vue/devtools-api': 7.7.10
       vue: 3.5.43
 
-  pixelmatch@7.1.0:
-    dependencies:
-      pngjs: 7.0.0
-
   playwright-core@1.55.1: {}
 
   playwright@1.55.1:
@@ -2296,8 +2278,6 @@ snapshots:
       playwright-core: 1.55.1
     optionalDependencies:
       fsevents: 2.3.2
-
-  pngjs@7.0.0: {}
 
   postcss@8.5.28:
     dependencies:
