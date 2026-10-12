@@ -240,3 +240,7 @@ repository.
 `package.json` pins the SuperDoc browser version used by the verification. Do not
 update it casually: a version change alters the system being measured and should
 produce a new reviewed verification release.
+
+## License
+
+Licensed under the [MIT License](LICENSE).
